@@ -76,6 +76,14 @@ function checkMacro (input) {
     var newInput = macroS[input[0]]['macroTemplate']
     return tildaVal(newInput, input[0], input)
   }
+  if (store[input[0]] !== undefined) {
+    var array = []
+    array.push(store[input[0]])
+    for (var j = 1; j < input.length; ++j) {
+      array.push(input[j])
+    }
+    return array
+  }
   else {
     return input
   }
@@ -243,4 +251,4 @@ var programParser = input => input
 })
 
 console.log(programParser(contents))
-//console.log(store)
+console.log(store)
