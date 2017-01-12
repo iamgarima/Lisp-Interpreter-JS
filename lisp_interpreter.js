@@ -76,6 +76,9 @@ function checkMacro (input) {
     var newInput = macroS[input[0]]['macroTemplate']
     return tildaVal(newInput, input[0], input)
   }
+  else {
+    return input
+  }
  }
 
  function tilda (input, key) {
@@ -110,12 +113,134 @@ function checkMacro (input) {
     return input
   }
 
+  // object having predefined and user-defined keywords
+  var store = {
+    '+': function (a, b) {
+      return a + b
+    },
+    '-': function (a, b) {
+      return a - b
+    },
+    '*': function (a, b) {
+      return a * b
+    },
+    '/': function (a, b) {
+      return a / b
+    },
+    '>': function (a, b) {
+      return a > b
+    },
+    '<': function (a, b) {
+      return a < b
+    },
+    '>=': function (a, b) {
+      return a >= b
+    },
+    '<=': function (a, b) {
+      return a <= b
+    },
+    'equal?': function (a, b) {
+      return (a === b)
+    },
+    'number?': function (a) {
+      return !isNaN(a)
+    },
+    'sqr': function (a) {
+      return a * a
+    },
+    'sqrt': function (a) {
+      return Math.sqrt(a)
+    }
+  }
+
+  // function for special statements like define
+  // console.log(special(parse('(define A 5)', [])))
+  function special (input) {
+    if (input === undefined) { return undefined }
+    var firstElem = input.shift()
+    if (firstElem === 'define') {
+      store[input.shift()] = evaluator(input)
+    }
+    else if (firstElem === 'set!') {
+      store[input.shift()] = evaluator(input)
+    }
+    else if (firstElem === 'if') {
+      var emp = []
+      if (special(input.shift())) {
+        emp.push(input.shift())
+        return special(emp)
+      }
+      input.shift()
+      emp.push(input.shift())
+      return special(emp)
+    }
+    input.unshift(firstElem)
+    return evaluator(input)
+  }
+
+  // evaluator function for evaluating expressions, variables and literals
+  function evaluator (input) {
+    var firstElem = input.shift()
+    var argsArr = []
+    var fn
+
+    if (typeof Number(firstElem) === 'number' && Number(firstElem) === Number(firstElem)) {
+      return Number(firstElem)
+    }
+    if (store[firstElem] !== undefined) {
+      if (typeof store[firstElem] === 'number') {
+        return store[firstElem]
+      }
+      fn = store[firstElem]
+      var l = input.length
+      for (var i = 0; i < l; ++i) {
+        argsArr.push(evaluator(input))
+      }
+      if (argsArr.length === 1) {
+        return fn(argsArr.pop())
+      }
+      return argsArr.reduce(fn)
+    }
+    if (firstElem[0] === 'lambda') {
+      if (input.length === 0) {
+        return firstElem
+      }
+      var ln = firstElem[1].length
+      for (var k = 0; k < ln; ++k) {
+        store[firstElem[1][k]] = Number(input[k])
+      }
+      if (typeof firstElem[2] === 'object') {
+        return special(firstElem[2])
+      }
+      var arr = []
+      arr.push(firstElem[2])
+      return special(arr)
+    }
+    if (typeof firstElem === 'object') {
+      return evaluator(firstElem)
+    }
+    if (firstElem === 'quote') {
+      return input.shift()
+    }
+    if (firstElem === 'begin') {
+      var len = input.length
+      for (var j = 0; j < len; ++j) {
+        if (j === len - 1) {
+          return special(input.shift())
+        }
+        special(input.shift())
+      }
+    }
+  }
+
+
 var programParser = input => input
 .trim()
 .split('\n')
 .map(exp => {
-  let val = checkMacro(parse(exp, []))
+  let val = special(checkMacro(parse(exp, [])))
   return val === undefined ? 'undefined' : val
 })
 
 console.log(programParser(contents))
+//console.log(store)
