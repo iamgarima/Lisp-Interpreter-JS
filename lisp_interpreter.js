@@ -1,3 +1,6 @@
+var fs = require('fs')
+var contents = fs.readFileSync('./source.lsp', 'utf-8')
+
 // Parser
 var operators = ['+', '-', '*', '/', '>', '>=', '<', '<=']
 var next
@@ -62,5 +65,13 @@ function space_parser (input) {
   return (input[0] === ' ') ? [[], input.slice(1)] : false
 }
 
+var programParser = input => input
+.trim()
+.split('\n')
+.map(exp => {
+  let val = parse(exp, [])
+  return val === undefined ? 'undefined' : val
+})
+.join('\n')
 
-console.log(parse('(define A 5)'))
+console.log(programParser(contents))
