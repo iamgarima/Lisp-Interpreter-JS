@@ -70,9 +70,45 @@ function checkMacro (input) {
   if (input[0] === 'defmacro') {
     macroS[input[1]] = {}
     macroS[input[1]]['macroArgs'] = input[2]
-    macroS[input[1]]['macroTemplate'] = input[3]
+    macroS[input[1]]['macroTemplate'] = tilda(input[3], input[1])
+  }
+  if (macroS[input[0]] !== undefined) {
+    var newInput = macroS[input[0]]['macroTemplate']
+    return tildaVal(newInput, input[0], input)
   }
  }
+
+ function tilda (input, key) {
+   for (var i = 0; i < input.length; ++i) {
+    if(typeof input[i] !== 'object') {
+      var l = macroS[key]['macroArgs'].length
+      for(var k = 0; k < l; ++k) {
+        input[i] = input[i].replace(macroS[key]['macroArgs'][k], '~' + macroS[key]['macroArgs'][k])
+      }
+    }
+    else {
+      tilda(input[i], key)
+    }
+   }
+   return input
+ }
+
+  function tildaVal (input, key, actualInput) {
+    for (var i = 0; i < input.length; ++i) {
+     if(typeof input[i] !== 'object') {
+       var l = macroS[key]['macroArgs'].length
+       for(var k = 0; k < l; ++k) {
+         if (input[i] === '~' + macroS[key]['macroArgs'][k]) {
+           input[i] = actualInput[k + 1]
+         }
+       }
+     }
+     else {
+       tildaVal(input[i], key, actualInput)
+     }
+    }
+    return input
+  }
 
 var programParser = input => input
 .trim()
@@ -81,7 +117,5 @@ var programParser = input => input
   let val = checkMacro(parse(exp, []))
   return val === undefined ? 'undefined' : val
 })
-.join('\n')
 
 console.log(programParser(contents))
-console.log(macroS)
