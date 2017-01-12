@@ -65,13 +65,23 @@ function space_parser (input) {
   return (input[0] === ' ') ? [[], input.slice(1)] : false
 }
 
+var macroS = {}
+function checkMacro (input) {
+  if (input[0] === 'defmacro') {
+    macroS[input[1]] = {}
+    macroS[input[1]]['macroArgs'] = input[2]
+    macroS[input[1]]['macroTemplate'] = input[3]
+  }
+ }
+
 var programParser = input => input
 .trim()
 .split('\n')
 .map(exp => {
-  let val = parse(exp, [])
+  let val = checkMacro(parse(exp, []))
   return val === undefined ? 'undefined' : val
 })
 .join('\n')
 
 console.log(programParser(contents))
+console.log(macroS)
