@@ -1,3 +1,6 @@
-(defmacro defun (name args body) (define name (lambda args body)))
-(defun square (x) (* x x))
+(defmacro defun (name args @body) (define name (lambda args @body)))
+(defun square (x) (* x x) (+ x x))
 (square 10)
+(defmacro setTo10 (num) (define num 10) (+ num num) (- num num))
+(define x 25)
+(setTo10 x)

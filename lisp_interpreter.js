@@ -70,7 +70,16 @@ function checkMacro (input) {
   if (input[0] === 'defmacro') {
     macroS[input[1]] = {}
     macroS[input[1]]['macroArgs'] = input[2]
-    macroS[input[1]]['macroTemplate'] = tilda(input[3], input[1])
+    if (input.length === 4) {
+      macroS[input[1]]['macroTemplate'] = tilda(input[3], input[1])
+    }
+    else {
+      var beginStore = ['begin']
+      for (var z = 3; z < input.length; ++z) {
+        beginStore.push(input[z])
+      }
+      macroS[input[1]]['macroTemplate'] = tilda(beginStore, input[1])
+    }
   }
   if (macroS[input[0]] !== undefined) {
     var newInput = macroS[input[0]]['macroTemplate']
@@ -106,11 +115,22 @@ function checkMacro (input) {
 
   function tildaVal (input, key, actualInput) {
     for (var i = 0; i < input.length; ++i) {
+      var beginArr = ['begin']
      if(typeof input[i] !== 'object') {
        var l = macroS[key]['macroArgs'].length
        for(var k = 0; k < l; ++k) {
-         if (input[i] === '~' + macroS[key]['macroArgs'][k]) {
-           input[i] = actualInput[k + 1]
+         if (macroS[key]['macroArgs'][k][0] !== '@') {
+           if (input[i] === '~' + macroS[key]['macroArgs'][k]) {
+             input[i] = actualInput[k + 1]
+           }
+         }
+         else {
+           if (input[i] === '~' + macroS[key]['macroArgs'][k]) {
+             for (var b = k + 1; b < actualInput.length; ++b) {
+               beginArr.push(actualInput[b])
+             }
+             input[i] = beginArr
+           }
          }
        }
      }
@@ -251,4 +271,4 @@ var programParser = input => input
 })
 
 console.log(programParser(contents))
-console.log(store)
+//console.log(store)
